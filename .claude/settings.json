@@ -1,0 +1,72 @@
+{
+  "permissions": {
+    "ask": [
+      "Bash(git push)",
+      "Bash(git push:*)",
+      "Bash(git merge:*)",
+      "Bash(git rebase:*)",
+      "Bash(git reset:*)",
+      "Bash(git cherry-pick:*)",
+      "Bash(git revert:*)",
+      "Bash(git am:*)",
+      "Bash(git update-ref:*)",
+      "Bash(git filter-branch:*)",
+      "Bash(git clean:*)",
+      "Bash(git stash -u:*)",
+      "Bash(git stash --include-untracked:*)",
+      "Write(spec-2d-sandbox.md)",
+      "Edit(spec-2d-sandbox.md)",
+      "Write(.claude/settings.json)",
+      "Edit(.claude/settings.json)",
+      "Write(tools/guard_boundary.php)",
+      "Edit(tools/guard_boundary.php)"
+    ],
+    "allow": [
+      "Bash(node run-scenarios.mjs:*)",
+      "Bash(node render-checks.mjs)",
+      "Bash(node render-smoke.mjs)",
+      "Bash(node round14-checks.mjs)",
+      "Bash(node round18-checks.mjs:*)",
+      "Bash(node round19-checks.mjs:*)",
+      "Bash(sh tools/test_guard_boundary.sh)",
+      "Bash(sh tools/test_guard_boundary_vibe.sh)",
+      "Bash(sh tools/test_run_dispatch.sh)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git add:*)",
+      "Bash(git branch)",
+      "Bash(git branch -a:*)",
+      "Bash(git branch -v:*)",
+      "Bash(git branch --merged:*)",
+      "Bash(git branch --no-merged:*)",
+      "Bash(git stash list)"
+    ],
+    "additionalDirectories": []
+  },
+  "autoMode": {
+    "soft_deny": [
+      "$defaults",
+      "Pushing to any git remote, on any branch, including tags and force pushes.",
+      "Anything that moves `main`: a merge or fast-forward into main, a commit made while HEAD is main, a reset/rebase/update-ref that repoints it.",
+      "Editing, overwriting, moving or deleting spec-2d-sandbox.md — it is the reviewer's brief; coders never edit it. Reading it is fine.",
+      "Changing the boundary itself: tools/guard_boundary*.php, .claude/settings*.json or anything under .vibe/."
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "php \"${CLAUDE_PROJECT_DIR:-.}/tools/guard_boundary.php\" || { echo 'BOUNDARY GUARD FAILED TO RUN — refusing this command. Fix tools/guard_boundary.php or php on PATH; do not work around it.' >&2; exit 2; }",
+            "timeout": 10,
+            "statusMessage": "boundary guard"
+          }
+        ]
+      }
+    ]
+  }
+}

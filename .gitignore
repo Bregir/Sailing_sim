@@ -1,0 +1,36 @@
+# Node
+node_modules/
+
+# Scratch output from the check scripts and exported tuning files
+*.tmp.json
+*.bak
+*.bak.*
+
+# Local tooling / secrets
+# .claude/* rather than .claude/ so the skills dir can be re-included below:
+# git cannot re-include a path whose parent directory is itself excluded.
+.claude/*
+!.claude/skills/
+# ⛔ settings.json is TRACKED on purpose. It installs the boundary guard (tools/guard_boundary.php):
+# the gates on pushing, on moving `main`, and on the spec. Left ignored, the guardrail would exist on one
+# machine, unrecorded, and a fresh clone would silently have no boundary at all. settings.local.json stays
+# ignored: that one is machine-local convenience, not enforcement.
+!.claude/settings.json
+# .claude/rules/ is TRACKED: Claude-Code-only notes that load alongside AGENTS.md (the shared brief).
+!.claude/rules/
+# .vibe/* rather than .vibe/ so the two files below can be re-included (same reason as .claude/*).
+.vibe/*
+# ⛔ hooks.toml and config.toml are TRACKED on purpose. hooks.toml installs the boundary for Mistral Vibe
+# (tools/guard_boundary_vibe.php, an adapter over tools/guard_boundary.php). A guard that is not tracked
+# does not exist on a fresh clone — Vibe would run with no boundary and nothing would say so. Anything
+# else under .vibe/ is machine-local and stays ignored.
+!.vibe/hooks.toml
+!.vibe/config.toml
+.env
+*.local
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

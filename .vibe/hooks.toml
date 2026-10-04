@@ -1,0 +1,26 @@
+# ⛔⛔ THE BOUNDARY, FOR MISTRAL VIBE. The same gates .claude/settings.json installs for Claude Code
+# (no push, `main` never moved, the reviewer's spec-2d-sandbox.md never edited, the boundary's own files
+# never changed), enforced in code.
+#
+# ONE entry, matching EVERY tool ("*"), on purpose: the adapter refuses any tool it does not know, and
+# it can only do that if it sees every call — MCP and custom tools included.
+#
+# ⛔ `strict = true` IS LOAD-BEARING. Without it a hook that cannot run (php missing, adapter missing,
+# a timeout, garbage on stdout) is a WARNING and the tool call PROCEEDS — Vibe fails open by default.
+# With it, every such failure is a DENY. Do not remove it, and do not "simplify" the command.
+#
+# ⚠ Vibe loads this file ONLY when it is started in the repo ROOT and that folder is TRUSTED. Started
+# from a subdirectory, or untrusted, there is NO boundary at all and nothing says so — run
+# tools/vibe_live_check.sh to see the hook fire. Editing this file takes effect on a reload or a new
+# session, not mid-session.
+#
+# The relative path resolves against Vibe's session directory (the repo root). If it does not, php
+# cannot open the file, exits non-zero, and `strict` turns that into a deny — closed, not open.
+[[hooks]]
+name = "sim-boundary"
+type = "pre_tool"
+match = "*"
+command = "php tools/guard_boundary_vibe.php"
+timeout = 15
+strict = true
+description = "Sailing-sim boundary guard (adapter over tools/guard_boundary.php); fails closed"

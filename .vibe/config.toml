@@ -1,0 +1,20 @@
+# Project config for Mistral Vibe. The boundary itself is .vibe/hooks.toml, not this file.
+# ⚠ Like hooks.toml, Vibe reads this only when started in the repo root and the folder is trusted.
+
+# Skills live under .claude/skills, shared with Claude Code.
+skill_paths = [".claude/skills"]
+
+# Shell tools ask by default. This is the interactive default, NOT the boundary: the boundary is the
+# pre_tool hook, which runs BEFORE this permission check and denies outright.
+[tools.bash]
+permission = "ask"
+
+[tools.git_bash]
+permission = "ask"
+
+[tools.powershell]
+permission = "ask"
+
+# No tool is disabled here. Every way Vibe can write a file or run a command on the model's behalf is
+# a tool call, and the hook matches every tool call and refuses unknown ones — the enumeration is the
+# tool tables at the top of tools/guard_boundary_vibe.php.

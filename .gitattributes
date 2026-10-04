@@ -1,0 +1,43 @@
+# Line-ending policy for this repo.
+#
+# Why this file exists: without it, git does no line-ending normalization.
+# Windows editors/tools write CRLF, the committed blobs are LF, and every
+# working copy then shows the *entire* tree as "modified" (CRLF vs LF) even
+# when no content changed. This file makes git normalize text files to LF on
+# commit and compare normalized, which kills the spurious churn for everyone
+# (including collaborators on other platforms).
+#
+# After adding this file, renormalize the existing tree once:
+#     git add .gitattributes
+#     git add --renormalize .
+#     git commit -m "Normalize line endings to LF (.gitattributes)"
+
+# Default: treat everything as text, auto-detect, store + check out as LF.
+* text=auto eol=lf
+
+# Explicit text types (belt-and-suspenders; keeps LF regardless of autocrlf).
+*.mjs       text eol=lf
+*.sh        text eol=lf
+*.php       text eol=lf
+*.toml      text eol=lf
+*.js        text eol=lf
+*.json      text eol=lf
+*.html      text eol=lf
+*.md        text eol=lf
+*.svg       text eol=lf
+*.txt       text eol=lf
+.gitignore  text eol=lf
+.gitattributes text eol=lf
+
+# Binary files — never touch line endings.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.pdf  binary
+*.zip  binary
+*.woff  binary
+*.woff2 binary
+*.ttf  binary
+*.otf  binary
