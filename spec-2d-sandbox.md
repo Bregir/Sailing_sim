@@ -5,7 +5,7 @@ tags:
   - sejlsim
   - spec
   - dispatch-brief
-updated: 2026-10-03
+updated: 2026-10-04
 ---
 
 # Gaff Sloop Physics Sandbox — Implementation Brief
@@ -535,3 +535,39 @@ Why the boom gets no rule of its own (Bregir, 2026-10-03): a stiff sail is pushe
 | Everything else | All sloop, cutter and schooner rows | Re-run and report against their current criteria. (u) keeps its band; report it, because steps 1 and 3 may move it |
 
 **Report back for round 19:** the three md5s before and after each step; the step-1 checks and the scenario trims that moved; per-sail pressure kept (step 2); the masses and lever arms used in step 3, with their derivation; every acceptance row with numbers; anything the moment balance did that the brief did not predict. Keep it in `report-round19.md`.
+
+**Round 19 (built, 2026-10-03).** All three steps; nothing tuned; detail in `report-round19.md`. Step 1 and step 2 work as specified (the sloop's jib keeps 0.372 dead downwind; the schooner's jib 0.18 → 0.38). Step 3 works — schooner (u) now passes all four tests — and did three things the brief did not predict: weight moves a goose-winged jib's tipping point ~10° outboard (past the 20° a sheet hauled home reaches), the jib comes across at TWA 155.5 / 142.0 / 137.3 at TWS 4 / 6 / 8, and **the sloop's tack breaks** ((e) completes at no speed; (d) 19.0 s against 20) through a knife edge in the camber model. Final md5s: sloop `9a9ab2d921324a974d5f28df7deb0b6d`, cutter `e9f8fcaa876abf1188cc2453a28d2f43`, schooner `83df12eb4f20848e8c1e6a8f29fb3c9a`.
+
+### Round 20 — camber of an unloaded sail, two acceptance fixes, and an investigation (no model change in step 3)
+
+Written 2026-10-04 from the round-19 review (Bregir, in Cowork). The first round worked through `run-dispatch` (`dispatch-round20.md`). Same discipline as round 19: md5s of all three ships before step 1 and after every step; every ship's acceptance set re-run after every step; nothing tuned; fails reported as fails.
+
+**Step 1 — an unloaded sail has no camber of its own (fixes the broken tack).** Round 19 §6: for the headsails `i0 = iFlip = 8°`, and the moment balance parks a free, luffing headsail at an effective angle of about 0.5° — just inside the flip threshold — so its camber never flips through a tack and the jib lifts the wrong way afterwards. The physics: a cloth sail's camber is made by its pressure; cloth with no load has no memory of which side it bellied. The rule, replacing §5's flip rule:
+- A sail whose effective angle `alphaE = s·i + i0` is **below the luffing threshold (`luffThreshold`, 4°) is unloaded**: its camber side follows the side the wind strikes, `s = sign(i)` — with a dead band, so `s` does not change while `|i| < 1°` `[assumed, to stop chatter at i ≈ 0]`.
+- A sail at or above the threshold is loaded and **keeps** its camber side. The fixed `iFlip` hysteresis is retired; say whether any row or check still read it.
+- Prove it is not a moved knife edge: trace the (e) tack from 2 kn and from 0.75 kn as round 19 §6 did (incidence × camber side, `alphaE`, jib side force, sails' yaw moment through the tack), and show the camber flips **once** per headsail per tack — no flip-flop. Also run the `iFlip` 6 diagnostic's failure case under the new rule.
+
+**Step 2 — two acceptance rows rewritten (rows only, no physics).**
+- **Beat untouched** now reads: (a) and (b) SOG and total drive within ±2% of **round 19's final values**. Round 19's (b) −6.3% came from step 1's sheet rule doing what was agreed (a 0.20 sheet now holds the clew at its fairlead) and is accepted as expected.
+- **Goose-wing holds** is set the way a crew sets it without a pole: goose-wing at TWA 180 by the round-18 procedure, then head up at 0.25°/s to 175, 170 and 165, holding each for 60 s. Expected: **holds at all three** (clew to windward, drawing, not aback). Setting the goose-wing from the main's side by the sheets alone at 165–170 becomes a **reported measurement with no criterion** — without a pole that is a physical "can't", not a fault.
+- **(i) "crosses gently"** — the round-19 agent's criterion is confirmed: peak heel after the cross below the eased variant's.
+
+**Step 3 — investigation only: why an unpoled goose-winged jib collapses earlier in a breeze. Do not change `index.html` in this step;** a diagnostic script is fine. Round 19 has the jib crossing at TWA 142 and 137 in 6 and 8 m/s; the sailor's experience is that it falls in earlier, on flat water too. The reviewer's lead `[assumed]`: without a pole, the wind *lifts* the clew rather than pushing it further out — the sail stands high and baggy, perhaps 45–55° out instead of the 70° the 2D sheet limit allows — so the wind comes along the sail sooner, independent of wind speed. (Twist was considered and rejected: an upper sail opening outward holds *longer*, not shorter.) Deliver, with numbers:
+- One or more candidate mechanisms, each grounded in geometry (stay rake, luff and foot length, sheet lead) — the clew-lift lead first, anything else you find second.
+- For each: the outboard angle it predicts for the clew, the collapse TWA at TWS 4, 6 and 8, and what it does to the goose-wing rows, (c) and the run.
+- The constants each needs, with derivation and `[assumed]` tags, and your recommendation. Round 21 builds the chosen one.
+
+**Acceptance, round 20:**
+
+| Row | Expected |
+|---|---|
+| (d) | Tack completes in < 20 s, exit > 2 kn; report the margin |
+| (e) | A threshold exists again between 0.25 and 1.5 kn |
+| Camber trace (step 1) | One flip per headsail per tack, no flip-flop |
+| Beat untouched (rewritten) | (a), (b) within ±2% of round 19 final |
+| Goose-wing holds (rewritten) | Holds at 175, 170, 165 after setting at 180 |
+| Goose-wing collapses | Report TWS 4 / 6 / 8. Known: 6 and 8 fail until round 21 — not a round-20 fail unless TWS 4 leaves its band |
+| Schooner (u) | Still passes all four |
+| Everything else | Re-run and report against current criteria |
+
+**Report back for round 20** in `report-round20.md` on the branch: md5s per step; the camber traces; every acceptance row with numbers; step 3's candidates, numbers and recommendation; anything the new camber rule did that the brief did not predict.
