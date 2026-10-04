@@ -1084,7 +1084,7 @@ SIM.defaultConfig = function(){
     //    definition (§13 A / round 14) so a second ship is a second object --
     ship: SIM.cloneShip(SIM.SHIPS.sloop),
 
-    iFlip: 8,        // deg, camber-side flips once s*i < -iFlip (round 5 hysteresis)
+    camberDeadBand: 1, // deg, an unloaded sail's camber side does not change while |i| is below this (round 20) [assumed, stops chatter at i ~ 0]
     kShade: 0.6,     // -, wind-shadow strength: a sail fully inside another's shadow, dead downwind, keeps 1-kShade of its pressure (§15's 0.6)
     beta: 20,        // deg, sheet fairlead offset
     kBoom: 12,       // deg/s per m/s AWS, boom free-swing rate
@@ -1156,10 +1156,13 @@ SIM.computeWind = function(state, config, tSim){
    makes lift at zero geometric incidence and only collapses when the wind gets
    round onto its back; on a sloop the jib also sits in the main's upwash and
    draws at a smaller geometric angle. Both are one offset per sail, i0, and one
-   piece of hysteretic state, the camber side s in {+1,-1} (+1 = camber bulging
-   to port, lift to port): initialise s=sign(i) on first use, then only flip
-   once the wind is well onto the back of the camber (s*i < -iFlip) — this is
-   what makes a backed sail fill AS a backed sail rather than flutter about zero. */
+   piece of state, the camber side s in {+1,-1} (+1 = camber bulging to port,
+   lift to port). Round 20: camber is made by pressure, so a sail whose effective
+   angle s*i + i0 is below the luffing threshold is UNLOADED and has no memory of
+   a side — it follows the side the wind strikes, s = sign(i), with a dead band so
+   s holds while |i| < camberDeadBand. A loaded sail keeps its side. This is what
+   makes a backed sail fill AS a backed sail, and lets a luffing headsail's camber
+   flip once, cleanly, through a tack. */
 SIM.computeSailForces = function(sailState, wind, config, phi, sailDef, blanket, rig){
   const AWA = wind.AWA, AWS = wind.AWS;
   const type = SIM.sailType(sailDef);
@@ -1173,8 +1176,8 @@ SIM.computeSailForces = function(sailState, wind, config, phi, sailDef, blanket,
   let s = sailState.camberSide;
   if (!s) {
     s = sign(i) || 1;
-  } else if (s*i < -config.iFlip) {
-    s = -s;
+  } else if (s*i + sailDef.i0 < config.luffThreshold && Math.abs(i) >= config.camberDeadBand) {
+    s = sign(i);
   }
 
   let alphaE = s*i + sailDef.i0;
@@ -5066,7 +5069,7 @@ function initBrowser(){
     beta: "Sheet fairlead offset, deg -- how far a jib's two sheets' allowed ranges overlap. Higher = more room for the clew to sit off-centre before the sheets fight each other.",
     kBoom: "How fast a slack sail swings toward the wind, deg/s per m/s of apparent wind. Higher = a released sheet snaps the boom across faster, especially in a gybe.",
     kShade: "Wind-shadow strength. A sail fully inside the shadow of a sail aft of it, dead downwind, keeps 1 - kShade of its wind pressure. 0 = no shading anywhere.",
-    iFlip: "How far onto its back the wind must get before a sail's camber snaps sides, deg. Higher = a backed sail is more reluctant to flip and fill on the new side.",
+    camberDeadBand: "Dead band on an unloaded sail's camber side, deg. While the wind is within this angle of the chord an unloaded sail keeps its camber side; outside it the camber follows the side the wind strikes. Higher = less chatter near head-to-wind.",
     loadRef: "Reference sheet load, N, used to throttle haul speed. Higher = a heavily loaded sheet can still be hauled in quickly before it's treated as 'maxed out'.",
     haulRateMax: "Fastest an unloaded sheet can be hauled in, ease-units/s. Higher = trimming sails in feels snappier.",
     easeRate: "How fast a sheet can be eased out, ease-units/s (load has no effect). Higher = dumping a sail's power in a gust happens faster.",
@@ -5125,7 +5128,7 @@ function initBrowser(){
      config.ship. */
   const MAST_PROPS = ['x','height'];
   const SAIL_PROPS = ['A','xCE','zCE','boomLen','deltaLim','braceLim','i0','clScale','zLo','zHi'];
-  const GLOBAL_SCALARS = ['rhoAir','rhoW','g','beta','kBoom','iFlip','kShade','loadRef','haulRateMax','easeRate','halyardRate','tillerRate','luffThreshold','apKp'];
+  const GLOBAL_SCALARS = ['rhoAir','rhoW','g','beta','kBoom','camberDeadBand','kShade','loadRef','haulRateMax','easeRate','halyardRate','tillerRate','luffThreshold','apKp'];
   const MAST_PROP_TOOLTIPS = {
     x: "Mast position, m forward of the CLR. Display-only -- moves where the boom, burgee and masthead are drawn, changes no force.",
     height: "Masthead height above deck, m. Display-only -- taller exaggerates how far the rig visibly leans with heel, changes no force.",
